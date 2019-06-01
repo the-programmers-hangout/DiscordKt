@@ -37,7 +37,7 @@ class KUtils(val config: KConfiguration) {
 
     init {
         registerInjectionObject(conversationService)
-        discord.jda.addEventListener(EventRegister)
+        discord.addEventListener(EventRegister)
         helpService = HelpService(container, config)
         registerListeners(ConversationListener(conversationService))
     }
