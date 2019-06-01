@@ -3,6 +3,8 @@ package me.aberrantfox.kjdautils.examples
 
 import com.google.common.eventbus.Subscribe
 import me.aberrantfox.kjdautils.api.annotation.Data
+import me.aberrantfox.kjdautils.api.annotation.Precondition
+import me.aberrantfox.kjdautils.api.annotation.PreconditionKind
 import me.aberrantfox.kjdautils.api.annotation.Service
 import me.aberrantfox.kjdautils.api.dsl.*
 import me.aberrantfox.kjdautils.api.startBot
@@ -12,6 +14,8 @@ import me.aberrantfox.kjdautils.internal.command.Pass
 import me.aberrantfox.kjdautils.internal.command.arguments.IntegerArg
 import me.aberrantfox.kjdautils.internal.command.arguments.SentenceArg
 import me.aberrantfox.kjdautils.internal.di.PersistenceService
+import me.aberrantfox.kjdautils.internal.permissions.DefaultGlobalPermissionManager
+import me.aberrantfox.kjdautils.internal.typealiases.PreconditionValue
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent
 
 data class MyCustomBotConfiguration(val version: String, val token: String)
@@ -32,21 +36,8 @@ fun main(args: Array<String>) {
         configure {
             prefix = "!"
             globalPath = "me.aberrantfox.kjdautils.examples"
+            //permissionManager = DefaultGlobalPermissionManager()
         }
-
-        registerCommandPreconditions({
-            if (it.channel.name != "ignored") {
-                Pass
-            } else {
-                Fail()
-            }
-        }, {
-            if (it.author.discriminator == "3693") {
-                Fail("Ignoring users with your discriminator.")
-            } else {
-                Pass
-            }
-        })
     }
 }
 
@@ -131,14 +122,23 @@ fun defineOther(log: MyCustomLogger) = commands {
     }
 }
 
-
-@Precondition
+//because this precondition is OneOf, it will ignore all other preconditions.
+@Precondition(kind = PreconditionKind.OneOf)
 fun nameBeginsWithF() = precondition {
     if(it.author.name.toLowerCase().startsWith("f")) {
         return@precondition Pass
     } else {
         return@precondition Fail("Your name must start with F!")
     }
+}
+
+//This precondition does not have a kind specified, as such it defaults to AllOf
+//AllOf preconditions are separate from OneOf -- All of these preconditions must pass
+//if a OneOf precondition does not pass. You should notice that this one always fails, but because
+// the above one is AllOf, it does not matter if your name begins with F. Otherwise it'll always fail.
+@Precondition
+fun failingCondition(): PreconditionValue = precondition {
+    Fail("Guarantee failure")
 }
 
 @Service
@@ -159,7 +159,6 @@ fun dependsOnAllServices(none: NoDependencies, single: SingleDependency, double:
         }
     }
 }
-
 
 @Data("config.json")
 data class ConfigurationObject(var prefix: String = "!")

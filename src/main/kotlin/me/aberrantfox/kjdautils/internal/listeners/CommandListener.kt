@@ -2,8 +2,6 @@ package me.aberrantfox.kjdautils.internal.listeners
 
 
 import com.google.common.eventbus.Subscribe
-import me.aberrantfox.kjdautils.internal.command.Fail
-import me.aberrantfox.kjdautils.internal.command.PreconditionResult
 import me.aberrantfox.kjdautils.api.dsl.CommandEvent
 import me.aberrantfox.kjdautils.api.dsl.CommandsContainer
 import me.aberrantfox.kjdautils.api.dsl.KConfiguration
@@ -13,9 +11,8 @@ import me.aberrantfox.kjdautils.extensions.jda.deleteIfExists
 import me.aberrantfox.kjdautils.extensions.jda.descriptor
 import me.aberrantfox.kjdautils.extensions.jda.isCommandInvocation
 import me.aberrantfox.kjdautils.extensions.stdlib.sanitiseMentions
+import me.aberrantfox.kjdautils.internal.command.*
 import me.aberrantfox.kjdautils.internal.command.CommandExecutor
-import me.aberrantfox.kjdautils.internal.command.CommandRecommender
-import me.aberrantfox.kjdautils.internal.command.cleanCommandMessage
 import me.aberrantfox.kjdautils.internal.logging.BotLogger
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.Message
@@ -29,7 +26,8 @@ internal class CommandListener(val config: KConfiguration,
                                var log: BotLogger,
                                val discord: Discord,
                                private val executor: CommandExecutor,
-                               private val preconditions: ArrayList<(CommandEvent) -> PreconditionResult> = ArrayList()) {
+                               private val preconditions: ArrayList<(CommandEvent) -> PreconditionResult> = ArrayList(),
+                               private val overridingPreconditions: ArrayList<(CommandEvent) -> PreconditionResult> = ArrayList()) {
 
     @Subscribe
     fun guildMessageHandler(e: GuildMessageReceivedEvent) =
@@ -41,6 +39,8 @@ internal class CommandListener(val config: KConfiguration,
 
 
     fun addPreconditions(vararg conditions: (CommandEvent) -> PreconditionResult) = preconditions.addAll(conditions)
+
+    fun addOverridingPreconditions(vararg conditions: (CommandEvent) -> PreconditionResult) = overridingPreconditions.addAll(conditions)
 
     private fun handleMessage(channel: MessageChannel, message: Message, author: User, guild: Guild? = null) {
 
@@ -109,6 +109,10 @@ internal class CommandListener(val config: KConfiguration,
     }
 
     private fun getPreconditionError(event: CommandEvent): String? {
+        val anyOverridingConditionPass = this.overridingPreconditions.any { it.invoke(event) is Pass }
+
+        if(anyOverridingConditionPass) return null
+
         val failedPrecondition = preconditions
                 .map { it.invoke(event) }
                 .firstOrNull { it is Fail }

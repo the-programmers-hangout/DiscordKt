@@ -6,10 +6,11 @@ import me.aberrantfox.kjdautils.internal.command.ArgumentType
 import me.aberrantfox.kjdautils.internal.command.arguments.WordArg
 import net.dv8tion.jda.core.entities.MessageEmbed
 
-class Conversation(val name: String,
-                   val description: String,
-                   val steps: List<Step>,
-                   var onComplete: (ConversationStateContainer) -> Unit = {}
+class Conversation(
+    val name: String,
+    val description: String,
+    val steps: List<Step>,
+    var onComplete: (ConversationStateContainer) -> Unit = {}
 )
 
 data class Step(val prompt: Any, val expect: ArgumentType)
@@ -21,8 +22,8 @@ data class ConversationStateContainer(
     val conversation: Conversation,
     var currentStep: Int,
     val discord: Discord) {
-    fun respond(message: String) = discord.getUserById(userId).sendPrivateMessage(message)
-    fun respond(message: MessageEmbed) = discord.getUserById(userId).sendPrivateMessage(message)
+    fun respond(message: String) = discord.getUserById(userId)?.sendPrivateMessage(message)
+    fun respond(message: MessageEmbed) = discord.getUserById(userId)?.sendPrivateMessage(message)
 }
 
 fun conversation(block: ConversationBuilder.() -> Unit): Conversation = ConversationBuilder().apply(block).build()

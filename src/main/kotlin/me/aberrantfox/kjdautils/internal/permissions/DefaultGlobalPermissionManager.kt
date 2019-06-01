@@ -29,7 +29,6 @@ class DefaultGlobalPermissionManager(savePath: String = "permissions.json") : Gl
     override fun setUserPermission(action: String, userId: String, allow: Boolean) =
             obtainUserMap(userId).apply { this[action] = allow }.unit()
 
-
     override fun getUserPermission(userId: String, action: String) =
             Permission(action, obtainUserMap(userId).getOrDefault(action, false))
 

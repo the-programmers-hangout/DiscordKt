@@ -2,6 +2,8 @@ package me.aberrantfox.kjdautils.api
 
 import com.google.common.eventbus.Subscribe
 import me.aberrantfox.kjdautils.api.annotation.Data
+import me.aberrantfox.kjdautils.api.annotation.Precondition
+import me.aberrantfox.kjdautils.api.annotation.PreconditionKind
 import me.aberrantfox.kjdautils.api.annotation.Service
 import me.aberrantfox.kjdautils.api.dsl.*
 import me.aberrantfox.kjdautils.discord.Discord
@@ -43,6 +45,8 @@ class KUtils(val config: KConfiguration) {
     fun registerInjectionObject(vararg obj: Any) = obj.forEach { diService.addElement(it) }
 
     fun registerCommandPreconditions(vararg conditions: (CommandEvent) -> PreconditionResult) = listener?.addPreconditions(*conditions)
+
+    fun registerOverridingPreconditions(vararg conditions: (CommandEvent) -> PreconditionResult) = listener?.addOverridingPreconditions(*conditions)
     
     fun configure(setup: KConfiguration.() -> Unit) {
         config.setup()
@@ -54,9 +58,15 @@ class KUtils(val config: KConfiguration) {
         registerListenersByPath()
         registerPreconditionsByPath()
         conversationService.registerConversations(config.globalPath)
+        setupPermissionManager()
     }
 
     fun registerListeners(vararg listeners: Any) = listeners.forEach { EventRegister.eventBus.register(it) }
+
+    private fun setupPermissionManager() = config.permissionManager?.let {
+        registerCommandPreconditions(it.producePrecondition())
+        diService.addElement(it)
+    }
 
     private fun registerCommands(): CommandsContainer {
         val localContainer = produceContainer(config.globalPath, diService)
@@ -82,9 +92,15 @@ class KUtils(val config: KConfiguration) {
     }
 
     private fun registerPreconditionsByPath() {
-        Reflections(config.globalPath, MethodAnnotationsScanner()).getMethodsAnnotatedWith(Precondition::class.java)
-                .map { diService.invokeReturningMethod(it) as ((CommandEvent) -> PreconditionResult) }
-                .forEach { registerCommandPreconditions(it) }
+        val preconditions = Reflections(config.globalPath, MethodAnnotationsScanner()).getMethodsAnnotatedWith(Precondition::class.java)
+            .map {
+                val kind = (it.annotations.first() as Precondition).kind
+                val precondition = diService.invokeReturningMethod(it) as ((CommandEvent) -> PreconditionResult)
+                Pair(kind, precondition)
+            }
+
+        preconditions.filter { it.first == PreconditionKind.AllOf }.forEach { registerCommandPreconditions(it.second) }
+        preconditions.filter { it.first == PreconditionKind.OneOf }.forEach { registerOverridingPreconditions(it.second) }
     }
 
     private fun detectServices() {

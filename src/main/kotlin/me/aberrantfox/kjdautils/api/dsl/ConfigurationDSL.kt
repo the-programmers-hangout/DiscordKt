@@ -1,5 +1,6 @@
 package me.aberrantfox.kjdautils.api.dsl
 
+import me.aberrantfox.kjdautils.internal.permissions.PermissionManager
 import net.dv8tion.jda.core.entities.Guild
 import net.dv8tion.jda.core.entities.MessageChannel
 import net.dv8tion.jda.core.entities.User
@@ -16,5 +17,6 @@ data class KConfiguration(
     var globalPath: String = "",
     var reactToCommands: Boolean = true,
     var deleteMode: PrefixDeleteMode = PrefixDeleteMode.Single,
-    var visibilityPredicate: (command: String, User, MessageChannel, Guild?) -> Boolean= { _, _, _, _ -> true }
+    var visibilityPredicate: (command: String, User, MessageChannel, Guild?) -> Boolean= { _, _, _, _ -> true },
+    var permissionManager: PermissionManager? = null
 )
