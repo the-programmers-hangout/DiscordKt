@@ -23,13 +23,13 @@ fun main(args: Array<String>) {
 }
 
 //Sometimes, your commands will need to depend on a database, or on a piece of functionality that you have
-//defined elsewhere in your codebase. It's very tempting to wrap this functionality up into an object, and
-//sometimes that is the right solution, however KUtils provides you with a nice mechanism so that you don't
-//have to do that.
+//defined elsewhere in your codebase.
+//KUtils completely handles this injection. This removes the need to create instances and pass them around yourself.
+//Simply mark all of your injectable object with the appropriate annotation, and let KUtils do the work.
 
 @CommandSet("ExampleCategory")
-//note how we say that we take the formatter as an argument to our function. This is how we provide dependencies
-//to kutils command sets.
+//This is an example of how we provide dependencies to KUtils command sets. Just ask for it as a parameter.
+//If you've annotated it properly, it will be registered and passed into this CommandSet automatically.
 fun exampleCommandSet(formatter: Formatter) = commands {
     command("message") {
         description = "Format a message to be pretty"
@@ -41,14 +41,15 @@ fun exampleCommandSet(formatter: Formatter) = commands {
     }
 }
 
+//All Services should be tagged with the @Service annotation
 @Service
 class Formatter {
-    //here is a simple dummy function
+    //Here is an example function that you may want in a service
     fun formatPrettyString(msg: String) = "Pretty Prefix: $msg"
 }
 
-//It's worth noting at this point that you can have Services depend on each other as well, and KUtils will
-//very simply figure out how to create them provided there isn't a cyclic dependency.
+//Along with injecting things like configuration Data, Services can also depend on other Services.
+//KUtils will sort out how to create them in the correct order, provided there isn't a cyclic dependency.
 
 @Service
 class NoDependencies
@@ -62,8 +63,6 @@ class DoubleDependency(noDependencies: NoDependencies, singleDependency: SingleD
 }
 
 @CommandSet("ExampleCategory2")
-//note how you don't need to depend on every service in a command set. If you just depend on a service
-//in another service, that's fine.
 fun secondExample(doubleDependency: DoubleDependency) = commands {
     command("pong") {
         description = "Pong!"

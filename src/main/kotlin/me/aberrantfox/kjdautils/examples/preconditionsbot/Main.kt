@@ -36,7 +36,7 @@ fun exampleCommand() = commands {
     }
 }
 
-//We must flag the function with @Precondition so that KUtils can pick it up
+//All Preconditions should be tagged with the @Precondition annotation
 @Precondition
 //here we say that the function is equal to the result of the precondition function
 fun ensureNameBeginsWithF() = precondition { event ->
@@ -52,10 +52,11 @@ fun ensureNameBeginsWithF() = precondition { event ->
  * condition is okay with this event -- or Fail, with a supplied message to indicate that this event has failed
  * this check and the reason is nested in the fail object.
  *
- *
  * There are two kinds of precondition. The default is allOf -- allOf preconditions are separated from the other kind.
- * Essentially, if a precondition is an allOf precondition, it, as well as *allof* the other ones in this category
- * must return pass. This is not the case for oneOf preconditions. OneOf preconditions only require one of them to pass.
+ * Essentially, if a precondition is an allOf precondition, it, as well as 'all of' the other ones in this category
+ * must return pass.
+ *
+ * This is not the case for oneOf preconditions. OneOf preconditions only require one of them to pass.
  * A good example of a oneOf precondition might be `the user is the server owner` or `the user is me, the bot developer`.
  *
  * A good example of an allOf precondition might be `the user is not muted` AND `the user is not on the blacklist` AND

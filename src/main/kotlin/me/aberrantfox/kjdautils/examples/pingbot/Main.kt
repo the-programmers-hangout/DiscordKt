@@ -12,14 +12,14 @@ fun main(args: Array<String>) {
         return
     }
 
-    //Call the start procedure for the bot.
+    //The startBot block is used to initialize and configure your bot
     startBot(token) {
-        //configure the globalPath for your bot
+        //Configure the globalPath for your bot
         //For this example bot, it's set to the package path of the ping bot so that it does not
         //load up any extra things from other packages.
         //You should make it your root package,
         //e.g. me.awesomedeveloper.myawesomebot
-        //That will allow KUtils to pick up all of your commands and such
+        //That will allow KUtils to pick up all of annotated objects. Commands, Data, Services, etc
         configure {
             globalPath = "me.aberrantfox.kjdautils.examples.pingbot"
             prefix = "!"

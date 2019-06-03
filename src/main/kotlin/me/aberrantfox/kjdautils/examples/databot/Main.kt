@@ -22,8 +22,8 @@ fun main(args: Array<String>) {
 }
 
 @CommandSet("ExampleCategory")
-//data objects can be passed around just like services can. They cannot, however, depend on a service.
-//You can pass the discord object into a data object.
+//Data objects can be injected into other registered objects.
+//This includes other data objects, preconditions, services, and command sets.
 fun exampleCommandCategory(config: BotConfiguration) = commands {
     command("owner") {
         description = "Display the server owner's id as defined by the config"
@@ -37,8 +37,7 @@ fun exampleCommandCategory(config: BotConfiguration) = commands {
 //In this case, the path specified is `bot/configuration/config.json`. This is how this will work in the framework
 // 1. KUtils detects that there is a class annotated with @Data
 // 2. KUtils reads the provided path, it then attempts to find the path **relatively**
-// 3. If there is a well formed JSON file there, it will load it into the object. This makes it available for other
-//    data objects, services, command sets and preconditions.
+// 3. If there is a well formed JSON file there, it will load it into the data class. This makes it injectable.
 // 4. If there is no file found, it will call the default constructor (as such you **must** provide default arguments)
 // 5. With the newly generated object, it will save the json generated from it to the specified path
 // 6. KUtils will do this for all data objects. If any of them are marked as `killIfGenerated` it will stop the bot
