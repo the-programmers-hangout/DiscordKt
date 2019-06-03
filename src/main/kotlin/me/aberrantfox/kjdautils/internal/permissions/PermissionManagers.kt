@@ -1,31 +1,18 @@
 package me.aberrantfox.kjdautils.internal.permissions
 
-import me.aberrantfox.kjdautils.internal.typealiases.PreconditionValue
+import me.aberrantfox.kjdautils.internal.typealiases.*
 
+data class Permission(val action: String, val allow: Boolean)
 
 interface PermissionManager {
     fun save()
     fun load()
     fun clearAll()
     fun producePrecondition() : PreconditionValue
-}
-
-data class Permission(val action: String, val allow: Boolean)
-
-interface GlobalPermissionManager : PermissionManager {
-    fun setUserPermission(action: String, userId: String, allow: Boolean)
-    fun getUserPermission(userId: String, action: String) : Permission
-    fun getUserPermissions(userId: String) : Set<Permission>
-}
-
-data class GuildPermissionSet(
-    val guildID: String,
-    val map: HashMap<String, List<Permission>>
-)
-
-interface GuildPermissionManager : PermissionManager {
-    fun setRankPermission(guildID: String, action: String, allow: Boolean)
-    fun getRankPermission(guildID: String, action: String) : Permission
-    fun getRankPermissions(guildID: String, rankID: String) : List<Permission>
-    fun getGuildPermissions(guildID: String) : GuildPermissionSet
+    fun setUserPermission(action: String, userId: UserId, allow: Boolean)
+    fun getUserPermission(userId: UserId, action: Action) : Permission
+    fun getUserPermissions(userId: UserId) : Set<Permission>
+    fun setGuildPermission(roleId: RoleId, action: Action, guildID: GuildId)
+    fun removePerGuildPermission(roleId: RoleId, action: Action, guildID: GuildId)
+    fun getGuildPermission(action: Action, guildID: GuildId): RoleId
 }
