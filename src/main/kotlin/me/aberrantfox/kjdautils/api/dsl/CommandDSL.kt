@@ -118,6 +118,8 @@ fun produceContainer(path: String, diService: DIService): CommandsContainer {
             .getMethodsAnnotatedWith(CommandSet::class.java)
             .map { it to (it.annotations.first { it is CommandSet } as CommandSet).category }
 
+    if(cmdMethods.isEmpty()) return CommandsContainer()
+
     val container = cmdMethods
             .map { (method, cmdSetCategory) ->
                 (diService.invokeReturningMethod(method) as CommandsContainer) to cmdSetCategory
