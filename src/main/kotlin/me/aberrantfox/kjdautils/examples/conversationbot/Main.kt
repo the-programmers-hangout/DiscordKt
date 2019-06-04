@@ -34,19 +34,18 @@ fun main(args: Array<String>) {
 
 @CommandSet("ExampleCategory")
 
-//defined for later use.
+//This name will be used to create the conversation when you need it.
 const val conversationName = "test-conversation"
 
-//The conversation service is a container that KUtils *automatically* injects as a service. You can freely import it
-//into anything.
+//The conversation service is a container that KUtils automatically injects as a service. It can be injected anywhere.
+//Services are explained in the 'dependency injection bot' section.
 fun createConversationCommands(conversationService: ConversationService) = commands {
     command("conversationtest") {
         description = "Test the implementation of the ConversationDSL"
         requiresGuild = true
         execute {
-            //The conversation service has a method available called createconversation,
-            //supply the necessary arguments and then pass in the conversation-id. In this case, it is test-conversation
-            //you can see test-conversation being defined below this command set.
+            //ConversationService.createConversation can be used to begin a conversation at any time.
+            //In this case, we begin our test-conversation which is defined below.
             conversationService.createConversation(it.author.id, it.guild!!.id, conversationName)
         }
     }
@@ -58,7 +57,7 @@ fun testConversation() = conversation {
     name = conversationName
     description = "Test conversation to test the implementation within KUtils."
 
-    //conversations are composed of steps.
+    //Conversations are composed of steps.
     //Each step is composed of two parts
     // 1. The prompt
     // 2. The CommandArgument that you are expecting
@@ -73,7 +72,7 @@ fun testConversation() = conversation {
                 }
                 setColor(Color.CYAN)
             }
-            //The argument, will continually prompt the user until it is met.
+            //This step cannot be passed until a valid argument is provided
             expect = UserArg
         }
         step {
@@ -89,8 +88,7 @@ fun testConversation() = conversation {
         }
     }
 
-    //The onComplete block is run just like `execute` is at the end of a command. You've
-    //access to all of the same things here.
+    //The onComplete block is run once all steps in the conversation have passed. You can now process the responses.
     onComplete {
         val user = it.responses.component1() as User
         val word = it.responses.component2() as String

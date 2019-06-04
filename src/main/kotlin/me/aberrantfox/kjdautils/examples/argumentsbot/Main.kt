@@ -34,22 +34,22 @@ fun main(args: Array<String>) {
 fun exampleCommandsSet() = commands {
     command("echo") {
         description = "Responds with whatever message you give it"
-        //the expect function is where you specify what you want the bot to receive
-        expect(SentenceArg) // here we are saying we want a sentence, this means the entire message minus the command name and prefix
+        //The expect function is where you can specify what type of data you want the bot to receive in a command
+        expect(SentenceArg) //Here we use a SentenceArg, which takes the entire message minus the command name and prefix
         execute {
-            //here we are extracting the sentence that we said would be there earlier
-            val whatTheySaid = it.args.first() as String //You must cast it to a String, it's currently type Any
+            //We can then extract the sentence that was requested in the 'expect'
+            val whatTheySaid = it.args.first() as String //All arguments are initially type 'Any', but can be casted to the argument type
             it.respond(whatTheySaid)
         }
     }
 
     command("add") {
         description = "Add two numbers together"
-        //here we simply say that we want two arguments instead of one
+        //You can expect as many arguments as you want, of any type. In this case, two integers
         expect(IntegerArg, IntegerArg)
         execute {
-            //you must get them both out of the array as well
-            val first = it.args.component1() as Int //you must cast them to Integer, as that is what IntegerArg guarantees will be there
+            //You then extract each of them similarly to how you would for a single argument
+            val first = it.args.component1() as Int //You can safely cast them to Int, as that is what IntegerArg guarantees
             val second = it.args.component2() as Int
             it.respond("Result = ${first + second}")
         }
@@ -57,9 +57,15 @@ fun exampleCommandsSet() = commands {
 
     command("welcome") {
         description = "Welcome a user"
-        //here we leverage the `arg` function to state that the argument that we are providing is optional,
-        //and that if it is not invoked with a value, the default will be `Welcome to the Server!`
-        //Of course, you don't need to use named arguments here, I just did that for the sake of clarity :)
+        //Here we leverage the `arg` function to create an optional argument with a default value.
+
+        //If this command is invoked with an argument that satisfies the expected argument, that data will be used.
+        //!!welcome Hello -> Hello
+
+        //If this command is invoked without an argument that satisfies the expected argument, the default value will be used.
+        //!!welcome -> Welcome to the server!
+
+        //You can use positional or named arguments, but we will use named argument for the sake of clarity :)
         expect(arg(SentenceArg, optional = true, default = "Welcome to the server!"))
         execute {
             val welcomeMessage = it.args.first() as String
@@ -69,10 +75,11 @@ fun exampleCommandsSet() = commands {
 
     command("country") {
         description = "Display the flag emoji for a country"
-        //You can see here that we are expecting a wordArg (which is only one word, not the whole sentence, i.e. no spaces allowed)
-        //but that we invoked it like it was a constructor. Well, it is a constructor. The string that we gave it is
-        //the name of this *specific* WordArg. In our case, we expect a country name, so I set it to that.
-        //This means that when a user runs !!help country, the documentation will show `Country Name` instead of `Word`
+        //You can see here that we are expecting a WordArg, which takes in a single word (no spaces).
+        //But as you can see, we've passed something extra. This is the display name of the argument.
+        //In the case of this command, the word we expect is a country name, so we should label it as such.
+        //This means that when a user runs !!help country, the documentation will show 'Country Name' instead of 'Word'
+        //This allows you to help users understand what the expected input is for a given command.
         expect(WordArg("Country Name"))
         execute {
             val countryName = it.args.first() as String
@@ -90,8 +97,9 @@ fun exampleCommandsSet() = commands {
         description = "Rate a user!"
         expect(RatingArg, UserArg)
         execute {
-            //note: We **know** that our rating arg convert function returns a result that is of type Rating, so it's
-            //safe to cast here. That is why the convention is Data for the data, and DataArg for the argument.
+            //We know for certain that our RatingArg 'convert' function returns a result that is of type Rating, so it's
+            //safe to cast here. The naming convention for arguments is to prefix the Arg with the conversion type.
+            //In this case, a 'RatingArg' produces a 'Rating'. You can see the definition of the Arg below.
             val rating = it.args.component1() as Rating
             val user = it.args.component2() as User
 
@@ -100,37 +108,39 @@ fun exampleCommandsSet() = commands {
     }
 }
 
-//you Must extend ArgumentType to create a Custom argument
+//To create a custom argument, inherit from ArgumentType
 //This defines a few things
-//1. A name - self explanatory
-//2. Consumption type - How many space separated words will this argument consume (1, many, all of them)
+//1. A name - self explanatory, but should be named as described above
+//2. Consumption type - How many space separated words will this argument consume (a single word; multiple words; all of them)
 //3. Examples - A list of strings which are valid string representations of an argument. For integer, "1" is such a string
-//4. A convert function which processes the arg or arguments and determines if it was a successful parse
+//4. A convert function which processes the argument or arguments and determines if it was successful
 
 open class RatingArg(override val name: String = "Rating") : ArgumentType {
     //Here, we state that the companion object is just a RatingArg that has been invoked. This way,
-    //you can Pass `RatingArg` into the expect Function without needing to use the constructor.
+    //you can Pass `RatingArg` into the expect function without needing to use the constructor.
     companion object : RatingArg()
 
     //Here we say that we are consuming just one arg. So we only look at the arg value passed into the convert function
     //and nothing else.
     override val consumptionType: ConsumptionType = ConsumptionType.Single
-    //Here we just build all possible examples programmatically, examples are picked from randomly. This helps
-    //to create better documentation
+    //Here we build our examples programmatically, but it can be done by hand.
+    //An example from this list will picked from randomly when a user invokes '!!help' on a command.
+    //This helps to create better documentation by providing an example of what input the user should give.
     override val examples: ArrayList<String> = ArrayList(Rating.values().map { it.name })
 
-    //Here we write the convert function, our implementation is as follows
+    //Here we write the convert function, which is what converts the input to out desired output type
     override fun convert(arg: String, args: List<String>, event: CommandEvent): ArgumentResult {
-        //first we determine if the `arg` we have in our hand is a valid Rating arg
+        //First we determine if the argument we have is a valid Rating arg
         val result = Rating.values().firstOrNull { it.name.toLowerCase() == arg.toLowerCase() }
 
-        //if it is, return it wrapped in a Result. Otherwise, provide a meaningful error message.
-        //You could also provide a list of valid arguments here too in the Error string.
+        //If it is valid, we can return it wrapped in a Result, and consume that piece of the input.
+        //If it is not valid, provide a meaningful error message. You can fail in multiple places if you have a more complicated argument.
+        //The error string can be whatever you want, such as a list of valid arguments.
         return if(result == null) ArgumentResult.Error("$arg is not a valid rating.") else ArgumentResult.Single(result)
     }
 }
 
-//A simple enum with 3 values
+//A simple enum with our valid rating types
 enum class Rating {
     Good, Alright, Bad
 }
