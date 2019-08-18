@@ -18,6 +18,7 @@ import me.aberrantfox.kjdautils.internal.logging.DefaultLogger
 import me.aberrantfox.kjdautils.internal.services.ConversationService
 import me.aberrantfox.kjdautils.internal.services.DocumentationService
 import me.aberrantfox.kjdautils.internal.services.HelpService
+import me.aberrantfox.kjdautils.internal.services.LibLocale
 import org.reflections.Reflections
 import org.reflections.scanners.MethodAnnotationsScanner
 import kotlin.system.exitProcess
@@ -31,6 +32,7 @@ class KUtils(val config: KConfiguration) {
     private val helpService: HelpService
     private val documentationService: DocumentationService
     private val diService = DIService()
+    private val libLocale: LibLocale = LibLocale(config)
 
     init {
         registerInjectionObject(discord)
@@ -41,6 +43,7 @@ class KUtils(val config: KConfiguration) {
     var logger: BotLogger = DefaultLogger()
 
     init {
+        registerInjectionObject(libLocale)
         registerInjectionObject(conversationService)
         discord.addEventListener(EventRegister)
         helpService = HelpService(container, config)

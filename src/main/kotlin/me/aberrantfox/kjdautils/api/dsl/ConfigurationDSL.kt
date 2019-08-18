@@ -18,5 +18,6 @@ data class KConfiguration(
     var deleteMode: PrefixDeleteMode = PrefixDeleteMode.Single,
     var deleteErrors: Boolean = false,
     var documentationSortOrder: List<String> = listOf(),
+    var language: String = "en-eu",
     var visibilityPredicate: (command: String, User, MessageChannel, Guild?) -> Boolean= { _, _, _, _ -> true }
 )
