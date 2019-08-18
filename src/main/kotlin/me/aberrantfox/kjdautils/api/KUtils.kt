@@ -46,7 +46,7 @@ class KUtils(val config: KConfiguration) {
         registerInjectionObject(libLocale)
         registerInjectionObject(conversationService)
         discord.addEventListener(EventRegister)
-        helpService = HelpService(container, config)
+        helpService = HelpService(container, config, libLocale)
         documentationService = DocumentationService(container)
         registerListeners(ConversationListener(conversationService))
     }

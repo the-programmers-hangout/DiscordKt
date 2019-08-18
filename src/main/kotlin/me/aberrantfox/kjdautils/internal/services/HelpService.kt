@@ -9,10 +9,10 @@ import java.awt.Color
 
 enum class SelectionArgument { CommandName, CategoryName }
 
-class HelpService(private val container: CommandsContainer, private val config: KConfiguration) {
+class HelpService(private val container: CommandsContainer, private val config: KConfiguration, private val locale: LibLocale) {
     init {
         container.command("help") {
-            description = "Display a help menu"
+            description = locale.libMessages.HELP_COMMAND_DESCRIPTION
             category = "utility"
             expect(arg(WordArg, true))
 
