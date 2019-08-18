@@ -22,7 +22,7 @@ class LibLocale(val config: KConfiguration) {
      */
     fun loadMessageSet(setName: String = defaultLanguageSetting): LibMessages {
         config.language = setName
-        val languageContent = LibLocale::class.java.getResource("$rootPath/${config.language}").readText()
+        val languageContent = LibLocale::class.java.getResource("$rootPath/${config.language}.json").readText()
         return gson.fromJson(languageContent, LibMessages::class.java)
     }
 
